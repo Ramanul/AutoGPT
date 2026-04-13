@@ -187,10 +187,15 @@ class Agent(BaseAgent[AnyActionProposal], Configurable[AgentSettings]):
             settings,
             workspace_root=app_config.workspace if cli_mode else None,
         )
+        import os as _os
+        _exec_local = _os.getenv("EXECUTE_LOCAL_COMMANDS", "false").strip().lower() in (
+            "true", "1", "yes"
+        )
         self.code_executor = CodeExecutorComponent(
             self.file_manager.workspace,
             CodeExecutorConfiguration(
-                docker_container_name=f"{settings.agent_id}_sandbox"
+                docker_container_name=f"{settings.agent_id}_sandbox",
+                execute_local_commands=_exec_local,
             ),
         )
         self.git_ops = GitOperationsComponent()

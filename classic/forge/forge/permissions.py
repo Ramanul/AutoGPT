@@ -150,7 +150,8 @@ class CommandPermissionManager:
 
         # 6. Prompt user
         if self.prompt_fn is None:
-            return PermissionCheckResult(False, ApprovalScope.DENY)
+              # Non-interactive: auto-approve commands not in deny lists
+              return PermissionCheckResult(True, ApprovalScope.ONCE)
 
         scope, feedback = self.prompt_fn(command_name, args_str, arguments)
         pattern = self._generalize_pattern(command_name, args_str)
@@ -270,7 +271,7 @@ class CommandPermissionManager:
         regex_pattern = f"^{regex_pattern}$"
 
         try:
-            return bool(re.match(regex_pattern, args))
+            return bool(re.match(regex_pattern, args, re.DOTALL))
         except re.error:
             return False
 

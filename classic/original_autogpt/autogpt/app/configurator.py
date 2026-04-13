@@ -75,10 +75,11 @@ async def check_models(
         if any(model == m.name for m in available_models):
             checked_models.append(model)
         else:
-            logger.warning(
-                f"You don't have access to {model}. "
-                f"Setting {model_type} to {GPT_3_MODEL}."
-            )
+            if model != GPT_3_MODEL:
+                logger.warning(
+                    f"You don't have access to {model}. "
+                    f"Setting {model_type} to {GPT_3_MODEL}."
+                )
             checked_models.append(GPT_3_MODEL)
 
     return tuple(checked_models)

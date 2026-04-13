@@ -154,6 +154,12 @@ class OpenAIModelName(str, enum.Enum):
     GPT5_4_MINI = GPT5_4_MINI_ROLLING
     GPT5_4_NANO_ROLLING = "gpt-5.4-nano"
     GPT5_4_NANO = GPT5_4_NANO_ROLLING
+    GPT_OSS_20B_FREE = "gpt-oss-20b:free"
+    LLAMA3_3_70B_TURBO = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+    LLAMA3_3_70B_VERSATILE = "llama-3.3-70b-versatile"
+    QWEN3_32B = "qwen/qwen3-32b"
+    GEMINI_2_FLASH = "gemini-2.0-flash"
+    GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GPT5_4_PRO_ROLLING = "gpt-5.4-pro"
     GPT5_4_PRO = GPT5_4_PRO_ROLLING
 
@@ -451,6 +457,54 @@ OPEN_AI_CHAT_MODELS = {
             max_tokens=400_000,
             has_function_call_api=True,
             supports_reasoning_effort=True,
+        ),
+        ChatModelInfo(
+            name=OpenAIModelName.GPT_OSS_20B_FREE,
+            provider_name=ModelProviderName.OPENAI,
+            prompt_token_cost=0.0,
+            completion_token_cost=0.0,
+            max_tokens=131072,
+            has_function_call_api=True,
+        ),
+        ChatModelInfo(
+            name=OpenAIModelName.LLAMA3_3_70B_TURBO,
+            provider_name=ModelProviderName.OPENAI,
+            prompt_token_cost=0.0,
+            completion_token_cost=0.0,
+            max_tokens=131072,
+            has_function_call_api=True,
+        ),
+        ChatModelInfo(
+            name=OpenAIModelName.LLAMA3_3_70B_VERSATILE,
+            provider_name=ModelProviderName.OPENAI,
+            prompt_token_cost=0.0,
+            completion_token_cost=0.0,
+            max_tokens=131072,
+            has_function_call_api=True,
+        ),
+        ChatModelInfo(
+            name=OpenAIModelName.QWEN3_32B,
+            provider_name=ModelProviderName.OPENAI,
+            prompt_token_cost=0.0,
+            completion_token_cost=0.0,
+            max_tokens=131072,
+            has_function_call_api=True,
+        ),
+        ChatModelInfo(
+            name=OpenAIModelName.GEMINI_2_FLASH,
+            provider_name=ModelProviderName.OPENAI,
+            prompt_token_cost=0.0,
+            completion_token_cost=0.0,
+            max_tokens=1000000,
+            has_function_call_api=True,
+        ),
+        ChatModelInfo(
+            name=OpenAIModelName.GEMINI_2_5_FLASH,
+            provider_name=ModelProviderName.OPENAI,
+            prompt_token_cost=0.0,
+            completion_token_cost=0.0,
+            max_tokens=1000000,
+            has_function_call_api=True,
         ),
         ChatModelInfo(
             name=OpenAIModelName.GPT5_2_PRO,

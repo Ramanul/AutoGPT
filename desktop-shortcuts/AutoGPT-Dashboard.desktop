@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AutoGPT Dashboard
+Comment=Start AutoGPT unified dashboard and open in browser
+Exec=/bin/bash -lc '/workspaces/AutoGPT/classic/agent_ui/start_autogpt_dashboard.sh'
+Terminal=false
+Categories=Development;
+StartupNotify=true

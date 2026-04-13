@@ -1,0 +1,30 @@
+{
+  "status": "done",
+  "logs": [
+    "[2026-04-12 22:46:05 UTC] Query: Samsung Galaxy S25 Plus 2026",
+    "[2026-04-12 22:46:05 UTC] Agent iteration 1/3",
+    "[2026-04-12 22:46:05 UTC] Search started on DDG HTML endpoint",
+    "[2026-04-12 22:46:06 UTC] Found 0 candidates from DDG",
+    "[2026-04-12 22:46:06 UTC] DDG returned no results, trying OLX search",
+    "[2026-04-12 22:46:06 UTC] Found 0 candidates from OLX",
+    "[2026-04-12 22:46:06 UTC] No priced results yet, retrying in 5s",
+    "[2026-04-12 22:46:11 UTC] Agent iteration 2/3",
+    "[2026-04-12 22:46:11 UTC] Search started on DDG HTML endpoint",
+    "[2026-04-12 22:46:12 UTC] Found 0 candidates from DDG",
+    "[2026-04-12 22:46:12 UTC] DDG returned no results, trying OLX search",
+    "[2026-04-12 22:46:12 UTC] Found 0 candidates from OLX",
+    "[2026-04-12 22:46:12 UTC] No priced results yet, retrying in 5s",
+    "[2026-04-12 22:46:17 UTC] Agent iteration 3/3",
+    "[2026-04-12 22:46:17 UTC] Search started on DDG HTML endpoint",
+    "[2026-04-12 22:46:18 UTC] Found 0 candidates from DDG",
+    "[2026-04-12 22:46:18 UTC] DDG returned no results, trying OLX search",
+    "[2026-04-12 22:46:18 UTC] Found 0 candidates from OLX",
+    "[2026-04-12 22:46:18 UTC] No priced results yet, retrying in 5s"
+  ],
+  "results": [],
+  "stats": {
+    "count": 0
+  },
+  "started_at": "2026-04-12T22:46:05.857539Z",
+  "finished_at": "2026-04-12T22:46:23.601454Z"
+}

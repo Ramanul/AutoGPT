@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Dashboard</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --card: #121c30;
+            --text: #e6edf8;
+            --muted: #9fb0cc;
+            --accent: #4fd1c5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background: radial-gradient(1200px 600px at 10% -20%, #1c2d52 0%, var(--bg) 45%);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            flex: 0 0 60px;
+            background: rgba(18, 28, 48, 0.95);
+            border-bottom: 1px solid #223252;
+            padding: 10px 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--accent);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .header-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+
+        .header-section.controls {
+            flex-wrap: nowrap;
+        }
+
+        .backend-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border: 1px solid #2b3d61;
+            border-radius: 999px;
+            font-size: 10px;
+            color: var(--muted);
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .backend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+            flex: 0 0 auto;
+        }
+
+        .backend-status.online .backend-dot {
+            background: #4fd1c5;
+            box-shadow: 0 0 8px rgba(79, 209, 197, 0.5);
+        }
+
+        .agent-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border: 1px solid #2b3d61;
+            border-radius: 999px;
+            font-size: 10px;
+            color: var(--muted);
+            min-width: 125px;
+            justify-content: center;
+        }
+
+        .agent-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9fb0cc;
+            box-shadow: 0 0 8px rgba(159, 176, 204, 0.5);
+            flex: 0 0 auto;
+        }
+
+        .agent-status.running .agent-dot {
+            background: #4fd1c5;
+            box-shadow: 0 0 8px rgba(79, 209, 197, 0.5);
+        }
+
+        .agent-status.stopped .agent-dot,
+        .agent-status.error .agent-dot {
+            background: #ff6b6b;
+            box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+        }
+
+        label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .task-input {
+            background: #0a1019;
+            border: 1px solid #2b3d61;
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 11px;
+            width: 240px;
+            outline: none;
+            flex-shrink: 0;
+        }
+
+        .task-input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 6px 11px;
+            background: #1a2940;
+            border: 1px solid #2b3d61;
+            color: var(--text);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            width: 112px;
+            min-width: 112px;
+            max-width: 112px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+            border-color: #2b3d61;
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+        }
+
+        .btn.danger {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 360px);
+            overflow: hidden;
+        }
+
+        .autogpt-shell {
+            border-top: 1px solid #223252;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 290px;
+            background: rgba(18, 28, 48, 0.6);
+        }
+
+        .autogpt-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .autogpt-frame {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #223252;
+            border-radius: 8px;
+            background: #0a1019;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid #223252;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel-title {
+            margin: 0 0 10px;
+            font-size: 13px;
+            color: var(--accent);
+            flex: 0 0 auto;
+            height: 18px;
+            white-space: nowrap;
+        }
+
+        .panel-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            gap: 8px;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .status-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+            flex: 0 0 auto;
+            overflow: hidden;
+            width: 100%;
+            min-height: 22px;
+        }
+
+        .pill {
+            padding: 3px 7px;
+            border: 1px solid #2b3d61;
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 10px;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pill.ok {
+            color: var(--accent);
+            border-color: #2f7f78;
+        }
+
+        .logs {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #0a1019;
+            border: 1px solid #223252;
+            border-radius: 6px;
+            padding: 8px;
+            white-space: pre-wrap;
+            line-height: 1.2;
+            font-size: 10px;
+            word-break: break-word;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        .stats-label {
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            flex: 0 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            flex: 0 0 auto;
+            height: 50px;
+            width: 100%;
+        }
+
+        .stat-box {
+            background: #0a1019;
+            border: 1px solid #2b3d61;
+            border-radius: 6px;
+            padding: 4px;
+            text-align: center;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            gap: 8px;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .results-header {
+            display: grid;
+            grid-template-columns: 1fr 0.5fr;
+            gap: 8px;
+            font-size: 10px;
+            color: var(--muted);
+            padding-bottom: 6px;
+            border-bottom: 1px solid #223252;
+            flex: 0 0 auto;
+            height: 18px;
+            white-space: nowrap;
+        }
+
+        .results-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .result-item {
+            display: grid;
+            grid-template-columns: 1fr 0.5fr;
+            gap: 8px;
+            padding: 6px;
+            background: #0a1019;
+            border-radius: 4px;
+            border: 1px solid #1a2940;
+            font-size: 10px;
+            flex: 0 0 auto;
+            min-height: 48px;
+            width: 100%;
+        }
+
+        .result-title {
+            color: var(--text);
+            word-break: break-word;
+            overflow: hidden;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .result-price {
+            color: var(--accent);
+            font-weight: bold;
+            text-align: right;
+            align-self: center;
+            white-space: nowrap;
+        }
+
+        .result-link {
+            grid-column: 1 / -1;
+            align-self: flex-end;
+        }
+
+        .result-link a {
+            color: #7fd4ff;
+            font-size: 9px;
+            text-decoration: none;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            overflow: hidden;
+            width: 100%;
+            min-height: 0;
+        }
+
+        .chat-meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            flex: 0 0 auto;
+            position: relative;
+        }
+
+        .llm-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border: 1px solid #2b3d61;
+            border-radius: 999px;
+            font-size: 10px;
+            color: var(--muted);
+            background: #0a1019;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .llm-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+            flex: 0 0 auto;
+        }
+
+        .llm-badge.active .llm-dot {
+            background: #4fd1c5;
+            box-shadow: 0 0 8px rgba(79, 209, 197, 0.5);
+        }
+
+        .llm-picker {
+            position: absolute;
+            top: 28px;
+            left: 0;
+            z-index: 20;
+            width: min(360px, 92vw);
+            background: #0a1019;
+            border: 1px solid #223252;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        }
+
+        .llm-picker.hidden {
+            display: none;
+        }
+
+        .llm-picker-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .llm-picker label {
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .llm-picker select {
+            background: #121c30;
+            border: 1px solid #2b3d61;
+            color: var(--text);
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 11px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .llm-picker select:focus {
+            border-color: var(--accent);
+        }
+
+        .llm-picker-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .llm-picker-note {
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background: #0a1019;
+            border-radius: 6px;
+            border: 1px solid #223252;
+            padding: 8px;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        .message {
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 10px;
+            line-height: 1.3;
+            word-break: break-word;
+            flex: 0 0 auto;
+            max-width: 100%;
+        }
+
+        .message.user {
+            background: #1a3a52;
+            color: #7fd4ff;
+            align-self: flex-end;
+            border: 1px solid #2a5a82;
+            max-width: 90%;
+        }
+
+        .message.assistant {
+            background: #1f2a3a;
+            color: var(--text);
+            align-self: flex-start;
+            border: 1px solid #2a3a4a;
+            max-width: 90%;
+        }
+
+        .message-time {
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 6px;
+            flex: 0 0 auto;
+            height: 45px;
+            width: 100%;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #0a1019;
+            border: 1px solid #223252;
+            border-radius: 6px;
+            padding: 6px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 10px;
+            resize: none;
+            outline: none;
+            height: 100%;
+            width: 100%;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+        }
+
+        .chat-send {
+            padding: 6px 10px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: var(--bg);
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            flex: 0 0 auto;
+            width: 58px;
+            min-width: 58px;
+            max-width: 58px;
+            height: 100%;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .chat-send:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .panel:nth-child(3) {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .header {
+                flex: 0 0 auto;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .btn {
+                width: 100px;
+                min-width: 100px;
+                max-width: 100px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Agent Execution Dashboard</h1>
+
+        <div class="header-section">
+            <label>Task:</label>
+            <input type="text" class="task-input" id="task-input" placeholder="Search params...">
+        </div>
+
+        <div class="header-section controls">
+            <button class="btn primary" id="start-btn">Start Agent</button>
+            <button class="btn danger" id="stop-btn">Stop</button>
+            <button class="btn danger" id="stop-all-btn">Stop Tot</button>
+            <button class="btn" id="clear-btn">Clear</button>
+        </div>
+
+        <div class="header-section">
+            <div class="backend-status" id="backend-status">
+                <span class="backend-dot"></span>
+                <span id="backend-status-text">Backend: checking...</span>
+            </div>
+        </div>
+
+        <div class="header-section">
+            <div class="agent-status" id="agent-status">
+                <span class="agent-dot"></span>
+                <span id="agent-status-text">Agent: idle</span>
+            </div>
+        </div>
+
+        <div class="header-section controls">
+            <button class="btn primary" id="autogpt-start-btn">Start AutoGPT UI</button>
+            <button class="btn danger" id="autogpt-stop-btn">Stop AutoGPT UI</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-title">Logs and Stats</div>
+            <div class="panel-content">
+                <div class="status-row" id="status-row"></div>
+
+                <div class="logs" id="logs">Waiting for agent...</div>
+
+                <div style="flex: 0 0 auto; width: 100%;">
+                    <div class="stats-label">Stats:</div>
+                    <div class="stats-grid" id="stats-row">
+                        <div class="stat-box">
+                            <div class="stat-label">Count</div>
+                            <div class="stat-value">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Mean</div>
+                            <div class="stat-value">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Median</div>
+                            <div class="stat-value">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Results</div>
+            <div class="panel-content">
+                <div class="results-container">
+                    <div class="results-header">
+                        <div>Title</div>
+                        <div>Price (RON)</div>
+                    </div>
+                    <div class="results-scroll" id="results"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Chat and Control</div>
+            <div class="panel-content">
+                <div class="chat-container">
+                    <div class="chat-meta">
+                        <div class="llm-badge" id="llm-badge" title="LLM status live din backend">
+                            <span class="llm-dot"></span>
+                            <span id="llm-badge-text">LLM: checking...</span>
+                        </div>
+                        <div class="llm-picker hidden" id="llm-picker">
+                            <div class="llm-picker-row">
+                                <label for="llm-provider-select">Provider</label>
+                                <select id="llm-provider-select"></select>
+                            </div>
+                            <div class="llm-picker-row">
+                                <label for="llm-model-select">Model</label>
+                                <select id="llm-model-select"></select>
+                            </div>
+                            <div class="llm-picker-note" id="llm-picker-note">Default: best model.</div>
+                            <div class="llm-picker-actions">
+                                <button class="btn" id="llm-cancel-btn"
+                                    style="width:auto; min-width:80px; max-width:none;">Cancel</button>
+                                <button class="btn primary" id="llm-apply-btn"
+                                    style="width:auto; min-width:90px; max-width:none;">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <textarea class="chat-input" id="chat-input"
+                            placeholder="Message or instruction... (Ctrl+Enter)" rows="2"></textarea>
+                        <button class="chat-send" id="chat-send">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="autogpt-shell">
+        <div class="autogpt-header">
+            <div class="panel-title" style="margin:0; height:auto;">AutoGPT Official UI (full features)</div>
+        </div>
+        <iframe class="autogpt-frame" id="autogpt-frame" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        const CHAT_KEY = 'agent_chat_history';
+        const AUTOGPT_UI_URL = computeAutoGptUiUrl();
+        let llmOptionsCache = null;
+        let backendOnline = false;
+        let lastKnownState = 'idle';
+
+        document.getElementById('autogpt-frame').src = AUTOGPT_UI_URL;
+        loadChatHistory();
+        startLiveRefresh();
+
+        document.getElementById('start-btn').addEventListener('click', startAgent);
+        document.getElementById('stop-btn').addEventListener('click', stopAgent);
+        document.getElementById('stop-all-btn').addEventListener('click', stopAllServices);
+        document.getElementById('clear-btn').addEventListener('click', clearAll);
+        document.getElementById('autogpt-start-btn').addEventListener('click', startAutoGPTUI);
+        document.getElementById('autogpt-stop-btn').addEventListener('click', stopAutoGPTUI);
+        document.getElementById('llm-badge').addEventListener('click', toggleLlmPicker);
+        document.getElementById('llm-provider-select').addEventListener('change', onLlmProviderChange);
+        document.getElementById('llm-apply-btn').addEventListener('click', applyLlmSelection);
+        document.getElementById('llm-cancel-btn').addEventListener('click', closeLlmPicker);
+        document.getElementById('chat-send').addEventListener('click', sendMessage);
+        document.getElementById('chat-input').addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        document.addEventListener('click', (e) => {
+            const picker = document.getElementById('llm-picker');
+            const badge = document.getElementById('llm-badge');
+            if (!picker || picker.classList.contains('hidden')) {
+                return;
+            }
+            if (picker.contains(e.target) || badge.contains(e.target)) {
+                return;
+            }
+            closeLlmPicker();
+        });
+
+        function computeAutoGptUiUrl() {
+            const { protocol, hostname } = window.location;
+            const forwardedMatch = hostname.match(/^(.*)-8765(\..+)$/);
+            if (forwardedMatch) {
+                return `${protocol}//${forwardedMatch[1]}-8000${forwardedMatch[2]}`;
+            }
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'http://localhost:8000';
+            }
+            return `${protocol}//${hostname}:8000`;
+        }
+
+        function setBackendStatus(online, label) {
+            backendOnline = online;
+            const el = document.getElementById('backend-status');
+            const txt = document.getElementById('backend-status-text');
+            el.classList.toggle('online', online);
+            txt.textContent = label || (online ? 'Backend: online' : 'Backend: offline');
+            syncControlsState(lastKnownState);
+            if (!online) {
+                setAgentStatusBadge('offline');
+                updateLlmBadge(null, null, false);
+            }
+        }
+
+        function updateLlmBadge(provider, model, backendIsOnline) {
+            const badge = document.getElementById('llm-badge');
+            const text = document.getElementById('llm-badge-text');
+
+            if (!backendIsOnline) {
+                badge.classList.remove('active');
+                text.textContent = 'LLM: backend offline';
+                return;
+            }
+
+            if (provider && model) {
+                badge.classList.add('active');
+                text.textContent = `LLM live: ${provider} / ${model}`;
+                return;
+            }
+
+            badge.classList.remove('active');
+            text.textContent = 'LLM: fallback local (fara API key)';
+        }
+
+        function closeLlmPicker() {
+            document.getElementById('llm-picker').classList.add('hidden');
+        }
+
+        async function toggleLlmPicker() {
+            const picker = document.getElementById('llm-picker');
+            if (!picker.classList.contains('hidden')) {
+                closeLlmPicker();
+                return;
+            }
+            if (!backendOnline) {
+                addChatMessage('Backend offline. Nu pot incarca optiunile LLM.', 'assistant');
+                return;
+            }
+
+            await loadLlmOptions();
+            picker.classList.remove('hidden');
+        }
+
+        function onLlmProviderChange() {
+            populateLlmModelsForProvider(document.getElementById('llm-provider-select').value, 'best');
+        }
+
+        async function loadLlmOptions() {
+            const r = await fetch('/api/llm/options?ts=' + Date.now());
+            const data = await r.json();
+            if (!r.ok || !data.ok) {
+                throw new Error(data.message || 'Nu am putut incarca optiunile LLM.');
+            }
+
+            llmOptionsCache = data;
+            const providerSelect = document.getElementById('llm-provider-select');
+            const desiredProvider = data.selectedProvider || data.effectiveProvider || 'openrouter';
+
+            providerSelect.innerHTML = '';
+            for (const p of (data.providers || [])) {
+                const opt = document.createElement('option');
+                opt.value = p.provider;
+                opt.textContent = `${p.provider}${p.configured ? '' : ' (not configured)'}`;
+                providerSelect.appendChild(opt);
+            }
+
+            if (Array.from(providerSelect.options).some((x) => x.value === desiredProvider)) {
+                providerSelect.value = desiredProvider;
+            }
+
+            populateLlmModelsForProvider(providerSelect.value, data.selectedModel || 'best');
+            updateLlmPickerNote(providerSelect.value);
+        }
+
+        function populateLlmModelsForProvider(provider, selectedModel) {
+            const modelSelect = document.getElementById('llm-model-select');
+            const providerInfo = (llmOptionsCache?.providers || []).find((x) => x.provider === provider);
+            modelSelect.innerHTML = '';
+
+            for (const model of (providerInfo?.models || ['best'])) {
+                const opt = document.createElement('option');
+                opt.value = model;
+                opt.textContent = model === 'best' ? 'best (default)' : model;
+                modelSelect.appendChild(opt);
+            }
+
+            if (Array.from(modelSelect.options).some((x) => x.value === selectedModel)) {
+                modelSelect.value = selectedModel;
+            } else if (Array.from(modelSelect.options).some((x) => x.value === 'best')) {
+                modelSelect.value = 'best';
+            }
+
+            updateLlmPickerNote(provider);
+        }
+
+        function updateLlmPickerNote(provider) {
+            const providerInfo = (llmOptionsCache?.providers || []).find((x) => x.provider === provider);
+            const note = document.getElementById('llm-picker-note');
+            const best = providerInfo?.defaultBestModel || 'n/a';
+            if (providerInfo?.configured) {
+                note.textContent = `Default best: ${best}`;
+            } else {
+                note.textContent = `Provider neconfigurat. Adauga API key pentru ${provider}.`;
+            }
+        }
+
+        async function applyLlmSelection() {
+            try {
+                const provider = document.getElementById('llm-provider-select').value;
+                const model = document.getElementById('llm-model-select').value;
+                const data = await apiPost('/api/llm/select', { provider, model });
+                addChatMessage(data.message || `LLM selectat: ${provider} / ${model}`, 'assistant');
+                closeLlmPicker();
+                await checkBackendHealth();
+                await loadLlmOptions();
+            } catch (e) {
+                addChatMessage(`Eroare selectie LLM: ${e.message}`, 'assistant');
+            }
+        }
+
+        function setAgentStatusBadge(status) {
+            const el = document.getElementById('agent-status');
+            const txt = document.getElementById('agent-status-text');
+            el.classList.remove('running', 'stopped', 'error');
+
+            if (!status || status === 'offline') {
+                txt.textContent = 'Agent: n/a';
+                return;
+            }
+
+            if (status === 'running') {
+                el.classList.add('running');
+            } else if (status === 'stopped') {
+                el.classList.add('stopped');
+            } else if (status === 'error') {
+                el.classList.add('error');
+            }
+            txt.textContent = `Agent: ${status}`;
+        }
+
+        function syncControlsState(status) {
+            lastKnownState = status || lastKnownState || 'idle';
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const stopAllBtn = document.getElementById('stop-all-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const autoStartBtn = document.getElementById('autogpt-start-btn');
+            const autoStopBtn = document.getElementById('autogpt-stop-btn');
+            const isRunning = lastKnownState === 'running';
+
+            startBtn.disabled = !backendOnline || isRunning;
+            stopBtn.disabled = !backendOnline || !isRunning;
+            stopAllBtn.disabled = !backendOnline;
+            clearBtn.disabled = !backendOnline;
+
+            const autogptRunning = document.body.dataset.autogptRunning === 'true';
+            autoStartBtn.disabled = !backendOnline || autogptRunning;
+            autoStopBtn.disabled = !backendOnline || !autogptRunning;
+        }
+
+        async function checkBackendHealth() {
+            try {
+                const r = await fetch('/health?ts=' + Date.now());
+                const data = await r.json();
+                const online = !!(r.ok && data && data.ok);
+                const running = data && data.agentRunning ? 'running' : null;
+                document.body.dataset.autogptRunning = data && data.autogptRunning ? 'true' : 'false';
+                document.body.dataset.llmProvider = data && data.llmProvider ? data.llmProvider : '';
+                document.body.dataset.llmModel = data && data.llmModel ? data.llmModel : '';
+                document.body.dataset.llmSelectedProvider = data && data.llmSelectedProvider ? data.llmSelectedProvider : '';
+                document.body.dataset.llmSelectedModel = data && data.llmSelectedModel ? data.llmSelectedModel : 'best';
+                setBackendStatus(online, online ? 'Backend: online' : 'Backend: offline');
+                updateLlmBadge(data && data.llmProvider, data && data.llmModel, online);
+                if (running) {
+                    syncControlsState(running);
+                } else {
+                    syncControlsState(lastKnownState);
+                }
+            } catch (_) {
+                setBackendStatus(false, 'Backend: offline');
+            }
+        }
+
+        async function startAutoGPTUI() {
+            addChatMessage('Pornesc UI oficial AutoGPT...', 'user');
+            try {
+                const data = await apiPost('/api/autogpt/start');
+                addChatMessage(data.message || 'UI AutoGPT pornit.', 'assistant');
+                document.body.dataset.autogptRunning = 'true';
+                document.getElementById('autogpt-frame').src = AUTOGPT_UI_URL;
+                syncControlsState(lastKnownState);
+            } catch (e) {
+                addChatMessage(`Eroare start AutoGPT UI: ${e.message}`, 'assistant');
+            }
+        }
+
+        async function stopAutoGPTUI() {
+            addChatMessage('Opresc UI oficial AutoGPT...', 'user');
+            try {
+                const data = await apiPost('/api/autogpt/stop');
+                addChatMessage(data.message || 'UI AutoGPT oprit.', 'assistant');
+                document.body.dataset.autogptRunning = 'false';
+                syncControlsState(lastKnownState);
+            } catch (e) {
+                addChatMessage(`Eroare stop AutoGPT UI: ${e.message}`, 'assistant');
+            }
+        }
+
+        async function stopAllServices() {
+            addChatMessage('Cerere oprire tot (agent + UI oficial AutoGPT)...', 'user');
+            try {
+                const data = await apiPost('/api/stop-all');
+                addChatMessage(data.message || 'Toate serviciile au fost oprite.', 'assistant');
+                document.body.dataset.autogptRunning = 'false';
+                syncControlsState('stopped');
+                setAgentStatusBadge('stopped');
+                refresh();
+            } catch (e) {
+                addChatMessage(`Eroare stop-all: ${e.message}`, 'assistant');
+            }
+        }
+
+        async function apiPost(path, payload) {
+            if (!backendOnline) {
+                throw new Error('Backend offline. Porneste server.py in classic/agent_ui.');
+            }
+            const r = await fetch(path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || {}),
+            });
+            let data = {};
+            try {
+                data = await r.json();
+            } catch (_) {
+                data = {};
+            }
+            if (!r.ok || data.ok === false) {
+                throw new Error(data.message || `Request failed (${r.status})`);
+            }
+            return data;
+        }
+
+        async function startAgent() {
+            const task = document.getElementById('task-input').value.trim() || 'Samsung Galaxy S25 Plus 2026';
+            addChatMessage(`Pornesc agentul cu task: ${task}`, 'user');
+            try {
+                const data = await apiPost('/api/start', { task });
+                addChatMessage(data.message || 'Agent pornit.', 'assistant');
+                refresh();
+                syncControlsState('running');
+            } catch (e) {
+                addChatMessage(`Eroare start agent: ${e.message}`, 'assistant');
+            }
+        }
+
+        async function stopAgent() {
+            addChatMessage('Cerere oprire agent.', 'user');
+            try {
+                const data = await apiPost('/api/stop');
+                addChatMessage(data.message || 'Agent oprit.', 'assistant');
+                refresh();
+                syncControlsState('stopped');
+            } catch (e) {
+                addChatMessage(`Eroare stop agent: ${e.message}`, 'assistant');
+            }
+        }
+
+        async function clearAll() {
+            if (confirm('Clear all data?')) {
+                try {
+                    await apiPost('/api/clear');
+                } catch (e) {
+                    addChatMessage(`Eroare clear backend: ${e.message}`, 'assistant');
+                }
+                localStorage.setItem(CHAT_KEY, '[]');
+                document.getElementById('chat-messages').innerHTML = '';
+                addChatMessage('Date locale sterse + stare agent resetata.', 'assistant');
+                refresh();
+                syncControlsState('idle');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addChatMessage(text, 'user');
+            input.value = '';
+
+            try {
+                const data = await apiPost('/api/chat', { message: text });
+                addChatMessage(data.reply || 'Mesaj primit.', 'assistant');
+            } catch (e) {
+                addChatMessage(`Eroare chat backend: ${e.message}`, 'assistant');
+            }
+        }
+
+        function addChatMessage(text, role) {
+            const container = document.getElementById('chat-messages');
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+            const time = new Date().toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+            msg.innerHTML = `<div>${text}</div><div class="message-time">${time}</div>`;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+
+            const messages = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
+            messages.push({ text, role, time });
+            localStorage.setItem(CHAT_KEY, JSON.stringify(messages.slice(-100)));
+        }
+
+        function loadChatHistory() {
+            const messages = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            messages.forEach((msg) => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.role}`;
+                msgDiv.innerHTML = `<div>${msg.text}</div><div class="message-time">${msg.time}</div>`;
+                container.appendChild(msgDiv);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function refresh() {
+            try {
+                const r = await fetch('state.json?ts=' + Date.now());
+                const s = await r.json();
+                syncControlsState(s.status || 'idle');
+                setAgentStatusBadge(s.status || 'idle');
+
+                const statusRow = document.getElementById('status-row');
+                const statusHtml = `
+                    <div class="pill ${s.status === 'done' ? 'ok' : ''}">status: ${s.status || '-'}</div>
+                    <div class="pill">started: ${(s.started_at || '-').substring(0, 16)}</div>
+                    <div class="pill">finished: ${(s.finished_at || '-').substring(0, 16)}</div>
+                `;
+                if (statusRow.innerHTML !== statusHtml) {
+                    statusRow.innerHTML = statusHtml;
+                }
+
+                const logsEl = document.getElementById('logs');
+                const logsText = (s.logs || []).join('\n');
+                if (logsEl.textContent !== logsText) {
+                    logsEl.textContent = logsText;
+                    logsEl.scrollTop = logsEl.scrollHeight;
+                }
+
+                const st = s.stats || {};
+                const statsRow = document.getElementById('stats-row');
+                const statsHtml = `
+                    <div class="stat-box"><div class="stat-label">Count</div><div class="stat-value">${st.count ?? '-'}</div></div>
+                    <div class="stat-box"><div class="stat-label">Min</div><div class="stat-value">${st.min ?? '-'}</div></div>
+                    <div class="stat-box"><div class="stat-label">Max</div><div class="stat-value">${st.max ?? '-'}</div></div>
+                    <div class="stat-box"><div class="stat-label">Mean</div><div class="stat-value">${st.mean ?? '-'}</div></div>
+                    <div class="stat-box"><div class="stat-label">Median</div><div class="stat-value">${st.median ?? '-'}</div></div>
+                `;
+                if (statsRow.innerHTML !== statsHtml) {
+                    statsRow.innerHTML = statsHtml;
+                }
+
+                const results = document.getElementById('results');
+                const resultCount = (s.results || []).length;
+                const currentItemCount = results.children.length;
+
+                if (resultCount !== currentItemCount || resultCount === 0) {
+                    results.innerHTML = '';
+                    for (const item of (s.results || [])) {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.innerHTML = `
+                            <div class="result-title">${item.title || '-'}</div>
+                            <div class="result-price">${item.price ?? '-'} RON</div>
+                            <div class="result-link"><a href="${item.link}" target="_blank" rel="noopener noreferrer">open</a></div>
+                        `;
+                        results.appendChild(div);
+                    }
+                }
+            } catch (e) {
+                setBackendStatus(false, 'Backend: offline');
+                syncControlsState('idle');
+                setAgentStatusBadge('offline');
+            }
+        }
+
+        function startLiveRefresh() {
+            checkBackendHealth();
+            refresh();
+            setInterval(refresh, 500);
+            setInterval(checkBackendHealth, 2000);
+        }
+    </script>
+</body>
+
+</html>

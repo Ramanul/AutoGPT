@@ -89,10 +89,26 @@ class _BaseOpenAIProvider(BaseModelProvider[_ModelName, _ModelProviderSettings])
     async def get_available_models(
         self,
     ) -> Sequence[ChatModelInfo[_ModelName] | EmbeddingModelInfo[_ModelName]]:
-        _models = (await self._client.models.list()).data
-        return [
-            self.MODELS[cast(_ModelName, m.id)] for m in _models if m.id in self.MODELS
-        ]
+        try:
+            _models_page = await self._client.models.list()
+            # OpenAI SDK returns a SyncPage/AsyncPage but some providers return a raw list
+            _models = _models_page.data if hasattr(_models_page, "data") else list(_models_page)
+        except Exception:
+            # If the models endpoint is broken, return whatever we know about the configured model
+            return list(self.MODELS.values())
+        result = []
+        for m in _models:
+            model_id = m.id if hasattr(m, "id") else str(m)
+            # Direct match (standard OpenAI IDs or full together.ai IDs)
+            if model_id in self.MODELS:
+                result.append(self.MODELS[cast(_ModelName, model_id)])
+            else:
+                # Strip provider prefix for OpenRouter compatibility
+                # e.g. "openai/gpt-5.4-nano" -> "gpt-5.4-nano"
+                stripped = model_id.split("/", 1)[-1]
+                if stripped in self.MODELS:
+                    result.append(self.MODELS[cast(_ModelName, stripped)])
+        return result
 
     def get_token_limit(self, model_name: _ModelName) -> int:
         """Get the maximum number of input tokens for a given model"""
@@ -304,6 +320,11 @@ class BaseOpenAIChatProvider(
         """
         kwargs = cast(CompletionCreateParams, kwargs)
 
+        # Keep completion budgets conservative to avoid provider-side credit failures
+        # when a model advertises very large token windows.
+        if max_output_tokens:
+            max_output_tokens = min(max_output_tokens, 4096)
+
         if max_output_tokens:
             # Newer models (o1, o3, o4, gpt-5, gpt-4.1, gpt-4o)
             # use max_completion_tokens instead of max_tokens
@@ -383,6 +404,29 @@ class BaseOpenAIChatProvider(
             int: Number of completion tokens used
         """
         completion_kwargs["model"] = completion_kwargs.get("model") or model
+
+        # Keep completion requests affordable on providers with credit quotas.
+        token_cap = 1500
+        model_name = str(completion_kwargs["model"])
+        if "max_tokens" in completion_kwargs and completion_kwargs["max_tokens"]:
+            completion_kwargs["max_tokens"] = min(  # type: ignore
+                int(completion_kwargs["max_tokens"]), token_cap  # type: ignore
+            )
+        if (
+            "max_completion_tokens" in completion_kwargs
+            and completion_kwargs["max_completion_tokens"]
+        ):
+            completion_kwargs["max_completion_tokens"] = min(  # type: ignore
+                int(completion_kwargs["max_completion_tokens"]), token_cap  # type: ignore
+            )
+        if (
+            "max_tokens" not in completion_kwargs
+            and "max_completion_tokens" not in completion_kwargs
+        ):
+            if model_name.startswith(("o1", "o3", "o4", "gpt-5", "gpt-4.1", "gpt-4o")):
+                completion_kwargs["max_completion_tokens"] = token_cap  # type: ignore
+            else:
+                completion_kwargs["max_tokens"] = token_cap  # type: ignore
 
         @self._retry_api_request
         async def _create_chat_completion_with_retry() -> ChatCompletion:

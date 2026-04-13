@@ -24,7 +24,6 @@
       "name": "docs",
       "path": "../docs"
     },
-
     {
       "name": "classic - autogpt",
       "path": "../classic/original_autogpt"
@@ -47,7 +46,8 @@
     }
   ],
   "settings": {
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "python.terminal.useEnvFile": true
   },
   "extensions": {
     "recommendations": [
